@@ -40,37 +40,35 @@ app.get("/", async (_: Request, res: Response) => {
   });
 });
 
-app.get("/dist/bundle.js", async (_: Request, res: Response) => {
-  fs.readFile(
-    path.join(__dirname, "../dist/bundle.js"),
-    "utf8",
-    (err, data) => {
-      if (err) {
-        console.error("Error reading HTML file:", err);
-        res.sendStatus(404);
-      } else {
-        const header = `
-        default-src 'self';
-        script-src 'self';
-        style-src 'self';
-        img-src 'self' data:;
-        font-src 'self';
-        connect-src 'self';
-        object-src 'none';
-        base-uri 'self';
-        form-action 'self';
-        frame-ancestors 'none';
-        block-all-mixed-content;
-        upgrade-insecure-requests;
-      `
-          .replace(/\s+/g, " ")
-          .trim();
-        res.setHeader("X-Frame-Options", "SAMEORIGIN");
-        res.setHeader("Content-Security-Policy", header);
-        res.send(data);
-      }
+app.get("/dist/:fileName", async (req: Request, res: Response) => {
+  const fileName = req.params["fileName"];
+
+  fs.readFile(path.join(__dirname, `../dist/${fileName}`), "utf8", (err, data) => {
+    if (err) {
+      console.error("Error reading HTML file:", err);
+      res.sendStatus(404);
+    } else {
+      const header = `
+          default-src 'self';
+          script-src 'self';
+          style-src 'self';
+          img-src 'self' data:;
+          font-src 'self';
+          connect-src 'self';
+          object-src 'none';
+          base-uri 'self';
+          form-action 'self';
+          frame-ancestors 'none';
+          block-all-mixed-content;
+          upgrade-insecure-requests;
+        `
+        .replace(/\s+/g, " ")
+        .trim();
+      res.setHeader("X-Frame-Options", "SAMEORIGIN");
+      res.setHeader("Content-Security-Policy", header);
+      res.send(data);
     }
-  );
+  });
 });
 
 app.listen(port, () => {
