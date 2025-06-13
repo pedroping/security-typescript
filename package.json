@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "build:front": "webpack",
-    "build:back": "ts-node ./src/ssr-entry.ts",
+    "build:front": "npx webpack",
+    "build:back": "npx ts-node ./src/ssr-entry.ts",
     "dev": "npx nodemon"
   },
   "keywords": [],
@@ -28,5 +28,7 @@
     "webpack-cli": "^6.0.1",
     "wepack-cli": "^0.0.1-security"
   },
-  "dependencies": {}
+  "dependencies": {
+    "uglify-js": "^3.19.3"
+  }
 }

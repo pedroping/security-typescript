@@ -3,6 +3,8 @@ import express, { Request, Response } from "express";
 import fs from "fs";
 import path from "path";
 
+const UglifyJS = require("uglify-js");
+
 const app = express();
 const port = 3000;
 
@@ -43,12 +45,15 @@ app.get("/", async (_: Request, res: Response) => {
 app.get("/dist/:fileName", async (req: Request, res: Response) => {
   const fileName = req.params["fileName"];
 
-  fs.readFile(path.join(__dirname, `../dist/${fileName}`), "utf8", (err, data) => {
-    if (err) {
-      console.error("Error reading HTML file:", err);
-      res.sendStatus(404);
-    } else {
-      const header = `
+  fs.readFile(
+    path.join(__dirname, `../dist/${fileName}`),
+    "utf8",
+    (err, data) => {
+      if (err) {
+        console.error("Error reading HTML file:", err);
+        res.sendStatus(404);
+      } else {
+        const header = `
           default-src 'self';
           script-src 'self';
           style-src 'self';
@@ -62,13 +67,26 @@ app.get("/dist/:fileName", async (req: Request, res: Response) => {
           block-all-mixed-content;
           upgrade-insecure-requests;
         `
-        .replace(/\s+/g, " ")
-        .trim();
-      res.setHeader("X-Frame-Options", "SAMEORIGIN");
-      res.setHeader("Content-Security-Policy", header);
-      res.send(data);
+          .replace(/\s+/g, " ")
+          .trim();
+
+        const codeToMinify: { [key: string]: string } = {};
+        codeToMinify[fileName] = data;
+
+        const minifyedCode = UglifyJS.minify(codeToMinify, {
+          toplevel: true,
+          mangle: {
+            properties: true,
+          },
+        }).code;
+
+        res.setHeader("X-Frame-Options", "SAMEORIGIN");
+        res.setHeader("Content-Security-Policy", header);
+
+        res.send(minifyedCode);
+      }
     }
-  });
+  );
 });
 
 app.listen(port, () => {
