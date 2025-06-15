@@ -12,6 +12,7 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/node": "^24.0.1",
     "@types/webpack": "^5.28.5",
@@ -29,6 +30,7 @@
     "wepack-cli": "^0.0.1-security"
   },
   "dependencies": {
+    "cors": "^2.8.5",
     "uglify-js": "^3.19.3"
   }
 }

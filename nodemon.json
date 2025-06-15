@@ -1,5 +1,5 @@
 {
   "watch": ["src"],
-  "ext": ".ts,.js",
+  "ext": ".ts,.js,.html",
   "exec": "npm run build:front && npm run build:back"
 }
