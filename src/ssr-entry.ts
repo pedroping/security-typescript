@@ -72,8 +72,8 @@ app.get(
   cors(corsOptions),
   async (req: Request, res: Response) => {
     const cookie = req.headers?.cookie?.replace("MyTokenAuth=", "");
-
-    if (!cookie || cookie != hash) {
+    
+    if (!cookie || !cookie.includes(hash)) {
       res.sendStatus(401);
       return;
     }
