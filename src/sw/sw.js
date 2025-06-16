@@ -5,6 +5,9 @@ const addResourcesToCache = async (resources) => {
 
 const putInCache = async (request, response) => {
   const cache = await caches.open("v1");
+
+  if (request.url.includes("chrome-extension")) return;
+
   await cache.put(request, response);
 };
 
