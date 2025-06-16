@@ -11,7 +11,13 @@ const corsOptions = {
   optionsSuccessStatus: 200,
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   preflightContinue: false,
+  credentials: true,
 };
+
+const hash = crypto
+  .createHmac("sha256", crypto.randomBytes(128).toString("base64"))
+  .update("ProjectToken")
+  .digest("hex");
 
 const app = express();
 const port = 3000;
@@ -48,6 +54,14 @@ app.get("/", async (_: Request, res: Response) => {
       res.setHeader("x-content-type-options", "nosniff");
       res.setHeader("X-Permitted-Cross-Domain-Policies", "none");
 
+      res.cookie("MyTokenAuth", hash, {
+        path: "/",
+        httpOnly: true,
+        maxAge: 2592000,
+        sameSite: "none",
+        secure: true,
+      });
+
       res.send(htmlString);
     }
   });
@@ -57,6 +71,13 @@ app.get(
   "/dist/:fileName",
   cors(corsOptions),
   async (req: Request, res: Response) => {
+    const cookie = req.headers?.cookie?.replace("MyTokenAuth=", "");
+
+    if (!cookie || cookie != hash) {
+      res.sendStatus(401);
+      return;
+    }
+
     const fileName = req.params["fileName"];
 
     fs.readFile(
@@ -84,14 +105,19 @@ app.get(
             .trim();
           res.setHeader("X-Frame-Options", "SAMEORIGIN");
           res.setHeader("Content-Security-Policy", header);
+          res.cookie("MyTokenAuth", hash, {
+            path: "/",
+            httpOnly: true,
+            maxAge: 2592000,
+            sameSite: "none",
+            secure: true,
+          });
 
           const fileExtension = fileName.split(".");
 
           if (
-            fileExtension[1] != "js" &&
-            fileExtension[1] != "mjs" &&
-            fileExtension[2] != "js" &&
-            fileExtension[2] != "mjs"
+            fileExtension[fileExtension.length - 1] != "js" &&
+            fileExtension[fileExtension.length - 1] != "mjs"
           ) {
             res.send(data);
             return;
