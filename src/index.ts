@@ -48,6 +48,8 @@ window.onload = () => {
         for (let registration of registrations) {
           registration.unregister();
         }
+
+        window.location.reload();
       });
     }
   });
