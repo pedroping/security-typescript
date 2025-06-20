@@ -3,7 +3,7 @@ import express, { Request, Response } from "express";
 import fs from "fs";
 import path from "path";
 import cors from "cors";
-
+import compression from "compression";
 const UglifyJS = require("uglify-js");
 
 const corsOptions = {
@@ -20,6 +20,7 @@ const hash = crypto
   .digest("hex");
 
 const app = express();
+app.use(compression());
 const port = 3000;
 
 app.get("/", async (_: Request, res: Response) => {
@@ -72,7 +73,7 @@ app.get(
   cors(corsOptions),
   async (req: Request, res: Response) => {
     const cookie = req.headers?.cookie?.replace("MyTokenAuth=", "");
-    
+
     if (!cookie || !cookie.includes(hash)) {
       res.sendStatus(401);
       return;
@@ -144,7 +145,7 @@ app.get(
 app.get(
   "/sw.bundle.js",
   cors(corsOptions),
-  async (req: Request, res: Response) => {
+  async (_: Request, res: Response) => {
     fs.readFile(
       path.join(__dirname, `../dist/sw.bundle.js`),
       "utf8",
@@ -188,6 +189,10 @@ app.get(
     );
   }
 );
+
+app.get("/test", cors(corsOptions), (_: Request, res: Response) => {
+  res.send(JSON.stringify({ test: "123" }));
+});
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);

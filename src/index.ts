@@ -1,6 +1,17 @@
 class TestsCalss {
   logSomething(a: string) {
     console.log(a);
+
+    fetch("/test", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => response.json())
+      .then((a) => {
+        console.log(a);
+      });
   }
 }
 
@@ -27,3 +38,17 @@ const registerServiceWorker = async () => {
 test.logSomething("Test at an new class");
 
 registerServiceWorker();
+
+window.onload = () => {
+  document.querySelector("button").addEventListener("click", () => {
+    if (window.navigator && navigator.serviceWorker) {
+      navigator.serviceWorker.getRegistrations().then(function (registrations) {
+        console.log(registrations);
+
+        for (let registration of registrations) {
+          registration.unregister();
+        }
+      });
+    }
+  });
+};

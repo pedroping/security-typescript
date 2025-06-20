@@ -30,6 +30,8 @@
     "wepack-cli": "^0.0.1-security"
   },
   "dependencies": {
+    "@types/compression": "^1.8.1",
+    "compression": "^1.8.0",
     "cors": "^2.8.5",
     "uglify-js": "^3.19.3"
   }
