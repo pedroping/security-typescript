@@ -1,9 +1,9 @@
+import compression from "compression";
+import cors from "cors";
 import crypto from "crypto";
 import express, { Request, Response } from "express";
 import fs from "fs";
 import path from "path";
-import cors from "cors";
-import compression from "compression";
 const UglifyJS = require("uglify-js");
 
 const corsOptions = {
@@ -139,6 +139,16 @@ app.get(
         }
       }
     );
+  }
+);
+
+app.get(
+  "/assets/:fileName",
+  cors(corsOptions),
+  async (req: Request, res: Response) => {
+    const fileName = req.params["fileName"];
+
+    res.sendFile(path.join(__dirname, `../dist/assets/${fileName}`));
   }
 );
 

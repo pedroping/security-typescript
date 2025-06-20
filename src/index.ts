@@ -1,7 +1,5 @@
 class TestsCalss {
-  logSomething(a: string) {
-    console.log(a);
-
+  logSomething() {
     fetch("/test", {
       method: "GET",
       headers: {
@@ -14,8 +12,6 @@ class TestsCalss {
       });
   }
 }
-
-const test = new TestsCalss();
 
 const registerServiceWorker = async () => {
   if ("serviceWorker" in navigator) {
@@ -35,7 +31,8 @@ const registerServiceWorker = async () => {
   }
 };
 
-test.logSomething("Test at an new class");
+const test = new TestsCalss();
+test.logSomething();
 
 registerServiceWorker();
 
