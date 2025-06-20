@@ -5,7 +5,8 @@
   "scripts": {
     "build:front": "npx webpack",
     "build:back": "npx ts-node ./src/ssr-entry.ts",
-    "dev": "npx nodemon"
+    "dev": "npx nodemon",
+    "prod": "npx webpack && npx ts-node ./src/ssr-entry.ts"
   },
   "keywords": [],
   "author": "",
