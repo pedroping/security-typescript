@@ -46,6 +46,11 @@ class TestsCalss {
       .then((response) => {
         const localCache = localStorage.getItem("cacheVersion");
 
+        if (!localCache) {
+          localStorage.setItem("cacheVersion", response);
+          return;
+        }
+
         if (localCache === response) return;
 
         localStorage.setItem("cacheVersion", response);
