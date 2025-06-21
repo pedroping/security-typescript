@@ -42,8 +42,11 @@ class TestsCalss {
       });
 
     fetch("/cacheVersion")
-      .then((response) => response.text())
+      .catch((err) => console.log(err))
+      .then((response) => response && response.text())
       .then((response) => {
+        if (!response) return;
+        
         const localCache = localStorage.getItem("cacheVersion");
 
         if (!localCache) {
