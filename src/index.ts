@@ -42,11 +42,15 @@ class TestsCalss {
       });
 
     fetch("/cacheVersion")
-      .catch((err) => console.log(err))
-      .then((response) => response && response.text())
+      .then((response) => {
+        if (response.ok) {
+          return response.text();
+        }
+        throw new Error("Error");
+      })
       .then((response) => {
         console.log(response);
-        
+
         if (!response) return;
 
         const localCache = localStorage.getItem("cacheVersion");
@@ -61,6 +65,9 @@ class TestsCalss {
         localStorage.setItem("cacheVersion", response);
 
         resetWorkers();
+      })
+      .catch((error) => {
+        console.log(error);
       });
   }
 }

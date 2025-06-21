@@ -1,0 +1,11 @@
+{
+  "name": "My PWA",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "assets/lock.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
