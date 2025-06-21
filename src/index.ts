@@ -1,5 +1,35 @@
+const registerServiceWorker = async () => {
+  if ("serviceWorker" in navigator) {
+    try {
+      await navigator.serviceWorker.register("sw.bundle.js");
+    } catch (error) {
+      console.error(`Registration failed with ${error}`);
+    }
+  }
+};
+
+const resetWorkers = () => {
+  if (window.navigator && navigator.serviceWorker) {
+    navigator.serviceWorker
+      .getRegistrations()
+      .then(async function (registrations) {
+        for (let registration of registrations) {
+          await registration.unregister();
+        }
+
+        setTimeout(() => {
+          alert("New version available!!!");
+
+          window.location.reload();
+        }, 10);
+      });
+  }
+};
+
+registerServiceWorker();
+
 class TestsCalss {
-  logSomething() {
+  doSomething() {
     fetch("/test", {
       method: "GET",
       headers: {
@@ -10,44 +40,28 @@ class TestsCalss {
       .then((a) => {
         console.log(a);
       });
+
+    fetch("/cacheVersion")
+      .then((response) => response.text())
+      .then((response) => {
+        const localCache = localStorage.getItem("cacheVersion");
+
+        if (localCache === response) return;
+
+        localStorage.setItem("cacheVersion", response);
+
+        resetWorkers();
+      });
   }
 }
 
-const registerServiceWorker = async () => {
-  if ("serviceWorker" in navigator) {
-    try {
-      const registration =
-        await navigator.serviceWorker.register("sw.bundle.js");
-      if (registration.installing) {
-        console.log("Service worker installing");
-      } else if (registration.waiting) {
-        console.log("Service worker installed");
-      } else if (registration.active) {
-        console.log("Service worker active");
-      }
-    } catch (error) {
-      console.error(`Registration failed with ${error}`);
-    }
-  }
-};
-
 const test = new TestsCalss();
-test.logSomething();
-
-registerServiceWorker();
+test.doSomething();
 
 window.onload = () => {
-  document.querySelector("button").addEventListener("click", () => {
-    if (window.navigator && navigator.serviceWorker) {
-      navigator.serviceWorker.getRegistrations().then(function (registrations) {
-        console.log(registrations);
-
-        for (let registration of registrations) {
-          registration.unregister();
-        }
-
-        window.location.reload();
-      });
-    }
-  });
+  document.querySelector("button").addEventListener("click", resetWorkers);
 };
+
+window.addEventListener("online", () => {
+  resetWorkers();
+});

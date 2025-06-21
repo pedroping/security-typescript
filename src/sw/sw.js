@@ -1,12 +1,16 @@
 const addResourcesToCache = async (resources) => {
-  const cache = await caches.open("v1");
+  const cache = await caches.open("myCache");
   await cache.addAll(resources);
 };
 
 const putInCache = async (request, response) => {
-  const cache = await caches.open("v1");
+  if (
+    request.url.includes("chrome-extension") ||
+    request.url.includes("cacheVersion")
+  )
+    return;
 
-  if (request.url.includes("chrome-extension")) return;
+  const cache = await caches.open("myCache");
 
   await cache.put(request, response);
 };
@@ -20,7 +24,6 @@ const cacheFirst = async ({ request, preloadResponsePromise }) => {
 
   const preloadResponse = await preloadResponsePromise;
   if (preloadResponse) {
-    console.info("using preload response", preloadResponse);
     putInCache(request, preloadResponse.clone());
     return preloadResponse;
   }

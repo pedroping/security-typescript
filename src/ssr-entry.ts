@@ -6,6 +6,11 @@ import fs from "fs";
 import path from "path";
 const UglifyJS = require("uglify-js");
 
+const cacheVersion = crypto
+  .createHmac("sha256", crypto.randomBytes(128).toString("base64"))
+  .update("ProjectVersion")
+  .digest("hex");
+
 const corsOptions = {
   origin: "http://localhost",
   optionsSuccessStatus: 200,
@@ -13,11 +18,6 @@ const corsOptions = {
   preflightContinue: false,
   credentials: true,
 };
-
-const hash = crypto
-  .createHmac("sha256", crypto.randomBytes(128).toString("base64"))
-  .update("ProjectToken")
-  .digest("hex");
 
 const app = express();
 app.use(compression());
@@ -55,14 +55,6 @@ app.get("/", async (_: Request, res: Response) => {
       res.setHeader("x-content-type-options", "nosniff");
       res.setHeader("X-Permitted-Cross-Domain-Policies", "none");
 
-      res.cookie("MyTokenAuth", hash, {
-        path: "/",
-        httpOnly: true,
-        maxAge: 2592000,
-        sameSite: "none",
-        secure: true,
-      });
-
       res.send(htmlString);
     }
   });
@@ -72,13 +64,6 @@ app.get(
   "/dist/:fileName",
   cors(corsOptions),
   async (req: Request, res: Response) => {
-    const cookie = req.headers?.cookie?.replace("MyTokenAuth=", "");
-
-    if (!cookie || !cookie.includes(hash)) {
-      res.sendStatus(401);
-      return;
-    }
-
     const fileName = req.params["fileName"];
 
     fs.readFile(
@@ -106,13 +91,6 @@ app.get(
             .trim();
           res.setHeader("X-Frame-Options", "SAMEORIGIN");
           res.setHeader("Content-Security-Policy", header);
-          res.cookie("MyTokenAuth", hash, {
-            path: "/",
-            httpOnly: true,
-            maxAge: 2592000,
-            sameSite: "none",
-            secure: true,
-          });
 
           const fileExtension = fileName.split(".");
 
@@ -202,6 +180,10 @@ app.get(
 
 app.get("/test", cors(corsOptions), (_: Request, res: Response) => {
   res.send(JSON.stringify({ test: "123" }));
+});
+
+app.get("/cacheVersion", cors(corsOptions), (_: Request, res: Response) => {
+  res.send(cacheVersion);
 });
 
 app.listen(port, () => {
