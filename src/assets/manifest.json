@@ -8,5 +8,21 @@
       "type": "image/png",
       "sizes": "512x512"
     }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot-1.png",
+      "sizes": "1279x920",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Home screen showing desktop"
+    },
+    {
+      "src": "screenshot-2.png",
+      "sizes": "385x830",
+      "type": "image/png",
+      "platform": "ios",
+      "label": "Home screen showing mobile"
+    }
   ]
 }
