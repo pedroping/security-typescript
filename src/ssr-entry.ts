@@ -11,6 +11,11 @@ const cacheVersion = crypto
   .update("ProjectVersion")
   .digest("hex");
 
+const cookieHash = crypto
+  .createHmac("sha256", crypto.randomBytes(128).toString("base64"))
+  .update("ProjectToken")
+  .digest("hex");
+
 const corsOptions = {
   origin: "http://localhost",
   optionsSuccessStatus: 200,
@@ -49,6 +54,14 @@ app.get("/", async (_: Request, res: Response) => {
         .replace(/\s+/g, " ")
         .trim();
 
+      res.cookie("MyTokenAuth", cookieHash, {
+        path: "/",
+        httpOnly: true,
+        maxAge: 2592000,
+        sameSite: "none",
+        secure: true,
+      });
+
       res.setHeader("X-Frame-Options", "SAMEORIGIN");
       res.setHeader("X-XSS-Protection", "1; mode=block");
       res.setHeader("Content-Security-Policy", header);
@@ -65,6 +78,13 @@ app.get(
   cors(corsOptions),
   async (req: Request, res: Response) => {
     const fileName = req.params["fileName"];
+
+    const cookie = req.headers?.cookie?.replace("MyTokenAuth=", "");
+
+    if (!cookie || !cookie.includes(cookieHash)) {
+      res.sendStatus(401);
+      return;
+    }
 
     fs.readFile(
       path.join(__dirname, `../dist/${fileName}`),
@@ -91,6 +111,13 @@ app.get(
             .trim();
           res.setHeader("X-Frame-Options", "SAMEORIGIN");
           res.setHeader("Content-Security-Policy", header);
+          res.cookie("MyTokenAuth", cookieHash, {
+            path: "/",
+            httpOnly: true,
+            maxAge: 2592000,
+            sameSite: "none",
+            secure: true,
+          });
 
           const fileExtension = fileName.split(".");
 

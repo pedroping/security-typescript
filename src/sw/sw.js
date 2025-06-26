@@ -16,6 +16,13 @@ const putInCache = async (request, response) => {
 };
 
 const cacheFirst = async ({ request, preloadResponsePromise }) => {
+  if (
+    request.url.includes("chrome-extension") ||
+    request.url.includes("cacheVersion")
+  ) {
+    return await fetch(request.clone());
+  }
+
   const responseFromCache = await caches.match(request);
 
   if (responseFromCache) {
