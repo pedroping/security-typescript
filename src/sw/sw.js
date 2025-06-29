@@ -6,7 +6,8 @@ const addResourcesToCache = async (resources) => {
 const putInCache = async (request, response) => {
   if (
     request.url.includes("chrome-extension") ||
-    request.url.includes("cacheVersion")
+    request.url.includes("cacheVersion") ||
+    request.url.includes("session")
   )
     return;
 
@@ -18,7 +19,8 @@ const putInCache = async (request, response) => {
 const cacheFirst = async ({ request, preloadResponsePromise }) => {
   if (
     request.url.includes("chrome-extension") ||
-    request.url.includes("cacheVersion")
+    request.url.includes("cacheVersion") ||
+    request.url.includes("session")
   ) {
     return await fetch(request.clone());
   }
@@ -60,7 +62,6 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     addResourcesToCache([
       "./",
-      "./test",
       "./dist/index.bundle.js",
       "https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js",
       "https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css",

@@ -6,6 +6,8 @@ module.exports = {
   entry: {
     index: "./src/index.ts",
     sw: "./src/sw/sw.js",
+    "session-validator": "./src/session-validator.ts",
+    "cache-handle": "./src/cache-handle/cache-handle.ts",
   },
   module: {
     rules: [
@@ -18,12 +20,16 @@ module.exports = {
   },
   plugins: [
     new CopyPlugin({
-      patterns: [
-        { from: "./src/assets", to: "assets" },
-      ],
+      patterns: [{ from: "./src/assets", to: "assets" }],
     }),
   ],
   resolve: {
+    alias: {
+      "@cache-handle": path.resolve(
+        __dirname,
+        "./src/cache-handle/cache-handle.ts"
+      ),
+    },
     extensions: [".ts", ".js"],
   },
   output: {

@@ -81,7 +81,10 @@ app.get(
 
     const cookie = req.headers?.cookie?.replace("MyTokenAuth=", "");
 
-    if (!cookie || !cookie.includes(cookieHash)) {
+    if (
+      fileName == "index.bundle.js" &&
+      (!cookie || !cookie.includes(cookieHash))
+    ) {
       res.sendStatus(401);
       return;
     }
@@ -205,8 +208,23 @@ app.get(
   }
 );
 
-app.get("/test", cors(corsOptions), (_: Request, res: Response) => {
-  res.send(JSON.stringify({ test: "123" }));
+app.get("/session", cors(corsOptions), (req: Request, res: Response) => {
+  const cookie = req.headers?.cookie?.replace("MyTokenAuth=", "");
+
+  if (!cookie || !cookie.includes(cookieHash)) {
+    res.sendStatus(401);
+    return;
+  }
+
+  res.cookie("MyTokenAuth", cookieHash, {
+    path: "/",
+    httpOnly: true,
+    maxAge: 2592000,
+    sameSite: "none",
+    secure: true,
+  });
+
+  res.status(200).send("Ok");
 });
 
 app.get("/cacheVersion", cors(corsOptions), (_: Request, res: Response) => {

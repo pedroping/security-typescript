@@ -9,7 +9,11 @@
     "moduleResolution": "node",
     "outDir": "./dist",
     "rootDir": ".",
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "typeRoots": ["./src/cache-handle/index.d.ts"],
+    "paths": {
+      "@cache-handle": ["./src/cache-handle/cache-handle.ts"]
+    }
   },
   "include": ["src/**/*", "html.d.ts"],
   "exclude": ["node_modules"]
