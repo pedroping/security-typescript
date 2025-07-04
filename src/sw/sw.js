@@ -22,7 +22,7 @@ const cacheFirst = async ({ request, preloadResponsePromise }) => {
     request.url.includes("cacheVersion") ||
     request.url.includes("session")
   ) {
-    return await fetch(request.clone());
+    return await fetch(request);
   }
 
   const responseFromCache = await caches.match(request);
@@ -70,6 +70,13 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
+  if (
+    event.request.url.includes("chrome-extension") ||
+    event.request.url.includes("cacheVersion") ||
+    event.request.url.includes("session")
+  )
+    return;
+
   event.respondWith(
     cacheFirst({
       request: event.request,
