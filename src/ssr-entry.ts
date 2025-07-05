@@ -164,16 +164,7 @@ app.get(
   "/sw.bundle.js",
   cors(corsOptions),
   async (_: Request, res: Response) => {
-    fs.readFile(
-      path.join(__dirname, `../dist/sw.bundle.js`),
-      "utf8",
-      (err, data) => {
-        if (err) {
-          console.error("Error reading HTML file:", err);
-          res.sendStatus(404);
-          return;
-        } else {
-          const header = `
+    const header = `
           script-src 'self';
           style-src 'self';
           img-src 'self' data:;
@@ -185,26 +176,12 @@ app.get(
           block-all-mixed-content;
           upgrade-insecure-requests;
         `
-            .replace(/\s+/g, " ")
-            .trim();
-          res.setHeader("X-Frame-Options", "SAMEORIGIN");
-          res.setHeader("Content-Security-Policy", header);
+      .replace(/\s+/g, " ")
+      .trim();
+    res.setHeader("X-Frame-Options", "SAMEORIGIN");
+    res.setHeader("Content-Security-Policy", header);
 
-          const codeToMinify: { [key: string]: string } = {};
-          codeToMinify["sw.bundle.js"] = data;
-
-          const minifyedCode = UglifyJS.minify(codeToMinify, {
-            toplevel: true,
-            mangle: {
-              properties: true,
-            },
-          }).code;
-
-          res.setHeader("Content-Type", "text/javascript; charset=utf-8");
-          res.send(minifyedCode);
-        }
-      }
-    );
+    res.sendFile(path.join(__dirname, `../dist/sw.bundle.js`));
   }
 );
 
