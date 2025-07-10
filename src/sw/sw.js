@@ -27,13 +27,18 @@ const cacheFirst = async ({ request, preloadResponsePromise }) => {
   const responseFromCache = await caches.match(request);
 
   if (responseFromCache) {
+    preloadResponsePromise && preloadResponsePromise.catch(() => {});
     return responseFromCache;
   }
 
-  const preloadResponse = await preloadResponsePromise;
-  if (preloadResponse) {
-    await putInCache(request, preloadResponse.clone());
-    return preloadResponse;
+  try {
+    const preloadResponse = await preloadResponsePromise;
+    if (preloadResponse) {
+      await putInCache(request, preloadResponse.clone());
+      return preloadResponse;
+    }
+  } catch (error) {
+    console.warn("Navigation preload failed:", error);
   }
 
   try {
@@ -79,10 +84,21 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  const responsePromise = cacheFirst({
-    request: event.request,
-    preloadResponsePromise: event.preloadResponse,
-  });
+  const responsePromise = (async () => {
+    const preloadPromise = event.preloadResponse || Promise.resolve(null);
+
+    const responseFromCache = await caches.match(event.request);
+
+    if (responseFromCache) {
+      preloadPromise.catch(() => {});
+      return responseFromCache;
+    }
+
+    return cacheFirst({
+      request: event.request,
+      preloadResponsePromise: preloadPromise,
+    });
+  })();
 
   event.waitUntil(responsePromise);
   event.respondWith(responsePromise);
