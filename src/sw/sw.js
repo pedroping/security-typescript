@@ -54,12 +54,13 @@ const cacheFirst = async ({ request, preloadResponsePromise }) => {
 };
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(async function () {
-    if (self.registration.navigationPreload) {
-      await self.registration.navigationPreload.enable();
-    }
-    return;
-  })();
+  if (event.waitUntil)
+    event.waitUntil(async function () {
+      if (self.registration.navigationPreload) {
+        await self.registration.navigationPreload.enable();
+      }
+      return;
+    });
 });
 
 self.addEventListener("install", (event) => {
