@@ -74,8 +74,10 @@ self.addEventListener("fetch", (event) => {
     event.request.url.includes("chrome-extension") ||
     event.request.url.includes("cacheVersion") ||
     event.request.url.includes("session")
-  )
+  ) {
+    event.respondWith(fetch(event.request));
     return;
+  }
 
   const responsePromise = cacheFirst({
     request: event.request,
