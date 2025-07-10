@@ -12,7 +12,6 @@ const putInCache = async (request, response) => {
     return;
 
   const cache = await caches.open("myCache");
-
   await cache.put(request, response);
 };
 
@@ -33,12 +32,13 @@ const cacheFirst = async ({ request, preloadResponsePromise }) => {
 
   const preloadResponse = await preloadResponsePromise;
   if (preloadResponse) {
-    putInCache(request, preloadResponse.clone());
+    await putInCache(request, preloadResponse.clone());
     return preloadResponse;
   }
+
   try {
     const responseFromNetwork = await fetch(request.clone());
-    putInCache(request, responseFromNetwork.clone());
+    await putInCache(request, responseFromNetwork.clone());
     return responseFromNetwork;
   } catch (error) {
     return new Response("Network error happened", {
@@ -77,10 +77,11 @@ self.addEventListener("fetch", (event) => {
   )
     return;
 
-  event.respondWith(
-    cacheFirst({
-      request: event.request,
-      preloadResponsePromise: event.preloadResponse,
-    })
-  );
+  const responsePromise = cacheFirst({
+    request: event.request,
+    preloadResponsePromise: event.preloadResponse,
+  });
+
+  event.waitUntil(responsePromise);
+  event.respondWith(responsePromise);
 });
