@@ -53,14 +53,13 @@ const cacheFirst = async ({ request, preloadResponsePromise }) => {
   }
 };
 
-const enableNavigationPreload = async () => {
-  if (self.registration.navigationPreload) {
-    await self.registration.navigationPreload.enable();
-  }
-};
-
 self.addEventListener("activate", (event) => {
-  event.waitUntil(enableNavigationPreload());
+  event.waitUntil(async function () {
+    if (self.registration.navigationPreload) {
+      await self.registration.navigationPreload.enable();
+    }
+    return;
+  })();
 });
 
 self.addEventListener("install", (event) => {
@@ -82,6 +81,10 @@ self.addEventListener("fetch", (event) => {
   ) {
     event.respondWith(fetch(event.request));
     return;
+  }
+
+  if (event.request.method === "POST" && event.request.mode === "navigate") {
+    event.respondWith(new Response(null, { status: 204 }));
   }
 
   const responsePromise = (async () => {
