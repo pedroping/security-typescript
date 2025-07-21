@@ -5,9 +5,10 @@ const addResourcesToCache = async (resources) => {
 
 const putInCache = async (request, response) => {
   if (
-    request.url.includes("chrome-extension") ||
-    request.url.includes("cacheVersion") ||
-    request.url.includes("session")
+    !request.url.includes("session-validator") &&
+    (request.url.includes("chrome-extension") ||
+      request.url.includes("cacheVersion") ||
+      request.url.includes("session"))
   )
     return;
 
@@ -17,34 +18,36 @@ const putInCache = async (request, response) => {
 
 const cacheFirst = async ({ request, preloadResponsePromise }) => {
   if (
-    request.url.includes("chrome-extension") ||
-    request.url.includes("cacheVersion") ||
-    request.url.includes("session")
+    !request.url.includes("session-validator") &&
+    (request.url.includes("chrome-extension") ||
+      request.url.includes("cacheVersion") ||
+      request.url.includes("session"))
   ) {
-    return await fetch(request);
+    return null;
   }
 
   const responseFromCache = await caches.match(request);
-
   if (responseFromCache) {
-    preloadResponsePromise && preloadResponsePromise.catch(() => {});
+    preloadResponsePromise?.catch(() => {});
     return responseFromCache;
   }
 
-  try {
-    const preloadResponse = await preloadResponsePromise;
-    if (preloadResponse) {
-      await putInCache(request, preloadResponse.clone());
-      return preloadResponse;
+  if (request.mode === "navigate") {
+    try {
+      const preloadResponse = await preloadResponsePromise;
+      if (preloadResponse) {
+        await putInCache(request, preloadResponse.clone());
+        return preloadResponse;
+      }
+    } catch (error) {
+      console.warn("Navigation preload failed:", error);
     }
-  } catch (error) {
-    console.warn("Navigation preload failed:", error);
   }
 
   try {
-    const responseFromNetwork = await fetch(request.clone());
-    await putInCache(request, responseFromNetwork.clone());
-    return responseFromNetwork;
+    const networkResponse = await fetch(request);
+    await putInCache(request, networkResponse.clone());
+    return networkResponse;
   } catch (error) {
     return new Response("Network error happened", {
       status: 408,
@@ -54,13 +57,13 @@ const cacheFirst = async ({ request, preloadResponsePromise }) => {
 };
 
 self.addEventListener("activate", (event) => {
-  if (event.waitUntil)
-    event.waitUntil(async function () {
+  event.waitUntil(
+    (async () => {
       if (self.registration.navigationPreload) {
         await self.registration.navigationPreload.enable();
       }
-      return;
-    });
+    })()
+  );
 });
 
 self.addEventListener("install", (event) => {
@@ -76,33 +79,18 @@ self.addEventListener("install", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (
-    event.request.url.includes("chrome-extension") ||
-    event.request.url.includes("cacheVersion") ||
-    event.request.url.includes("session")
+    !event.request.url.includes("session-validator") &&
+    (event.request.url.includes("chrome-extension") ||
+      event.request.url.includes("cacheVersion") ||
+      event.request.url.includes("session"))
   ) {
-    event.respondWith(fetch(event.request));
     return;
   }
 
-  if (event.request.method === "POST" && event.request.mode === "navigate") {
-    event.respondWith(new Response(null, { status: 204 }));
-  }
-
-  const responsePromise = (async () => {
-    const preloadPromise = event.preloadResponse || Promise.resolve(null);
-
-    const responseFromCache = await caches.match(event.request);
-
-    if (responseFromCache) {
-      preloadPromise.catch(() => {});
-      return responseFromCache;
-    }
-
-    return cacheFirst({
-      request: event.request,
-      preloadResponsePromise: preloadPromise,
-    });
-  })();
+  const responsePromise = cacheFirst({
+    request: event.request,
+    preloadResponsePromise: event.preloadResponse || Promise.resolve(null),
+  });
 
   event.waitUntil(responsePromise);
   event.respondWith(responsePromise);
