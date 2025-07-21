@@ -40,6 +40,6 @@ fetch("/cacheVersion")
 
     if (!resp.ok || resp.status == 401) resetWorkers({ noMessage: true });
   } catch (_) {
-    resetWorkers({ noMessage: true });
+    console.log(_);
   }
 })();
