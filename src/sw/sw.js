@@ -12,17 +12,18 @@ const putInCache = async (request, response) => {
 };
 
 const shouldIgnoreRequest = (request) => {
-  const blockedPatterns = [
-    "chrome-extension",
-    "cacheVersion",
-    "session",
-    "session-validator",
-  ];
-  return blockedPatterns.some((part) => request.url.includes(part));
+  const blockedPatterns = ["chrome-extension", "cacheVersion", "session"];
+
+  const allowedPatterns = ["session-validator.bundle"];
+
+  return (
+    !allowedPatterns.some((part) => request.url.includes(part)) &&
+    blockedPatterns.some((part) => request.url.includes(part))
+  );
 };
 
 const cacheFirst = async ({ request, preloadResponsePromise }) => {
-  if (shouldIgnoreRequest(request)) return null;
+  if (shouldIgnoreRequest(request)) return fetch(request);
 
   const cachedResponse = await caches.match(request);
   if (cachedResponse) {
@@ -47,11 +48,6 @@ const cacheFirst = async ({ request, preloadResponsePromise }) => {
     await putInCache(request, networkResponse.clone());
     return networkResponse;
   } catch (error) {
-    if (request.mode === "navigate") {
-      const fallback = await caches.match("./offline.html");
-      return fallback || new Response("Offline", { status: 503 });
-    }
-
     return new Response("Network error happened", {
       status: 408,
       headers: { "Content-Type": "text/plain" },
@@ -64,6 +60,7 @@ self.addEventListener("install", (event) => {
     addResourcesToCache([
       "./",
       "./dist/index.bundle.js",
+      "./dist/session-validator.bundle.js",
       "https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js",
       "https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css",
     ])
@@ -74,8 +71,9 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
       if (self.registration.navigationPreload) {
-        await self.registration.navigationPreload.enable();
+        await self.registration.navigationPreload.disable();
       }
+
       const keys = await caches.keys();
       await Promise.all(
         keys
@@ -88,10 +86,9 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const { request } = event;
-
-  if (shouldIgnoreRequest(request) || request.method !== "GET") return;
-
   const preloadResponsePromise = event.preloadResponse || Promise.resolve(null);
 
-  event.respondWith(cacheFirst({ request, preloadResponsePromise }));
+  if (request.method === "GET" && !shouldIgnoreRequest(request)) {
+    event.respondWith(cacheFirst({ request, preloadResponsePromise }));
+  }
 });
