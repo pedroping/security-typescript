@@ -87,6 +87,10 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  if (event.request.method === "POST" && event.request.mode === "navigate") {
+    return;
+  }
+
   const responsePromise = cacheFirst({
     request: event.request,
     preloadResponsePromise: event.preloadResponse || Promise.resolve(null),
