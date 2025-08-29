@@ -21,7 +21,29 @@ class TestsCalss {
 const test = new TestsCalss();
 test.doSomething();
 
+function embedScripts() {
+  let bootstrapScript = document.createElement("script");
+  let sessionValidatorScript = document.createElement("script");
+
+  bootstrapScript.src =
+    "https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js";
+  bootstrapScript.integrity =
+    "sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO";
+  bootstrapScript.crossOrigin = "anonymous";
+  bootstrapScript.async = true;
+  bootstrapScript.defer = true;
+
+  sessionValidatorScript.src = "/dist/session-validator.bundle.js";
+  sessionValidatorScript.crossOrigin = "anonymous";
+  sessionValidatorScript.async = true;
+  sessionValidatorScript.defer = true;
+
+  document.body.appendChild(bootstrapScript);
+  document.body.appendChild(sessionValidatorScript);
+}
+
 window.onload = () => {
+  embedScripts();
   document
     .querySelector("button")
     .addEventListener("click", () => resetWorkers({ noMessage: true }));

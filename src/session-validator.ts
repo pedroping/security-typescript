@@ -3,40 +3,13 @@ import { resetWorkers } from "@cache-handle";
 const _cookieStore = (window as any).cookieStore;
 
 async function versionCheck() {
-  setInterval(async () => {
-    const localHash = localStorage.getItem("cacheVersion");
-    const localCache = (await _cookieStore.get("cacheCookie"))?.value;
+  const localHash = localStorage.getItem("cacheVersion");
+  const localCache = (await _cookieStore.get("cacheCookie"))?.value;
 
-    console.log(localHash);
-    console.log(localCache);
+  console.log(localHash);
+  console.log(localCache);
 
-    if (!localHash) {
-      fetch("/cacheVersion")
-        .then((response) => {
-          if (response.ok) {
-            return response.text();
-          }
-          throw new Error("Error");
-        })
-        .then(async (response) => {
-          if (!response) return;
-
-          _cookieStore.set({
-            name: "cacheCookie",
-            value: response,
-            expires: Date.now() + 120000,
-          });
-          localStorage.setItem("cacheVersion", response);
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-
-      return;
-    }
-
-    if (localCache) return;
-
+  if (!localHash) {
     fetch("/cacheVersion")
       .then((response) => {
         if (response.ok) {
@@ -47,32 +20,62 @@ async function versionCheck() {
       .then(async (response) => {
         if (!response) return;
 
-        if (localHash === response) {
-          await _cookieStore.set({
-            name: "cacheCookie",
-            value: response,
-            expires: Date.now() + 100000,
-          });
-          return;
-        }
+        _cookieStore.set({
+          name: "cacheCookie",
+          value: response,
+          expires: Date.now() + 120000,
+        });
+        localStorage.setItem("cacheVersion", response);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
 
+    return;
+  }
+
+  if (localCache) return;
+
+  fetch("/cacheVersion")
+    .then((response) => {
+      if (response.ok) {
+        return response.text();
+      }
+      throw new Error("Error");
+    })
+    .then(async (response) => {
+      if (!response) return;
+
+      if (localHash === response) {
         await _cookieStore.set({
           name: "cacheCookie",
           value: response,
           expires: Date.now() + 100000,
         });
-        localStorage.setItem("cacheVersion", response);
+        return;
+      }
 
-        resetWorkers();
-      })
-      .catch((error) => {
-        console.log(error);
+      await _cookieStore.set({
+        name: "cacheCookie",
+        value: response,
+        expires: Date.now() + 100000,
       });
-  }, 120000);
+      localStorage.setItem("cacheVersion", response);
+
+      resetWorkers();
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+}
+
+async function versionCheckInterval() {
+  await versionCheck();
+  setInterval(async () => await versionCheck(), 120000);
 }
 
 (async function () {
-  versionCheck();
+  versionCheckInterval();
 
   try {
     const resp = await fetch("/session", {
