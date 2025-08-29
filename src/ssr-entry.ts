@@ -29,7 +29,7 @@ app.use(compression());
 const port = process.env.PORT || 3000;
 
 app.get("/", async (_: Request, res: Response) => {
-  const nonce = crypto.randomBytes(16).toString("base64");    
+  const nonce = crypto.randomBytes(16).toString("base64");
 
   fs.readFile(path.join(__dirname, "/index.html"), "utf8", (err, data) => {
     if (err) {
@@ -76,7 +76,7 @@ app.get(
   "/dist/:fileName",
   cors(corsOptions),
   async (req: Request, res: Response) => {
-    const fileName = req.params["fileName"];
+    let fileName = req.params["fileName"];
 
     const cookie = req.headers?.cookie?.replace("MyTokenAuth=", "");
 
@@ -84,8 +84,7 @@ app.get(
       fileName == "index.bundle.js" &&
       (!cookie || !cookie.includes(cookieHash))
     ) {
-      res.sendStatus(401);
-      return;
+      fileName = 'unauthorized.bundle.js'
     }
 
     fs.readFile(
