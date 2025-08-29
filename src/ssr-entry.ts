@@ -16,6 +16,9 @@ const cookieHash = crypto
   .update("ProjectToken")
   .digest("hex");
 
+console.log('Application auth: ', cookieHash);
+console.log('Application version: ', cacheVersion);
+
 const corsOptions = {
   origin: "http://localhost",
   optionsSuccessStatus: 200,

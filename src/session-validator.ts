@@ -2,6 +2,12 @@ import { resetWorkers } from "@cache-handle";
 
 const _cookieStore = (window as any).cookieStore;
 
+function generateSecureRandomHash(): string {
+  const array = new Uint8Array(16);
+  window.crypto.getRandomValues(array);
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
 async function versionCheck() {
   const localHash = localStorage.getItem("cacheVersion");
   const localCache = (await _cookieStore.get("cacheCookie"))?.value;
@@ -10,7 +16,7 @@ async function versionCheck() {
   console.log(localCache);
 
   if (!localHash) {
-    fetch("/cacheVersion")
+    fetch("/cacheVersion?CacheBusting=" + generateSecureRandomHash())
       .then((response) => {
         if (response.ok) {
           return response.text();
@@ -36,7 +42,7 @@ async function versionCheck() {
 
   if (localCache) return;
 
-  fetch("/cacheVersion")
+  fetch("/cacheVersion?CacheBusting=" + generateSecureRandomHash())
     .then((response) => {
       if (response.ok) {
         return response.text();
@@ -91,6 +97,4 @@ async function sessionDomain() {
   }
 }
 
-window.onload = () => {
-  sessionDomain();
-};
+sessionDomain();

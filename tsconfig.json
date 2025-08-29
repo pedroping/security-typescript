@@ -10,7 +10,7 @@
     "outDir": "./dist",
     "rootDir": ".",
     "esModuleInterop": true,
-    "typeRoots": ["./src/cache-handle/index.d.ts"],
+    "typeRoots": ["./src/cache-handle", "./node_modules/@types"],
     "paths": {
       "@cache-handle": ["./src/cache-handle/cache-handle.ts"]
     }
