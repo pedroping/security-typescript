@@ -74,7 +74,7 @@ async function versionCheckInterval() {
   setInterval(async () => await versionCheck(), 120000);
 }
 
-(async function () {
+async function sessionDomain() {
   versionCheckInterval();
 
   try {
@@ -89,4 +89,8 @@ async function versionCheckInterval() {
   } catch (_) {
     console.log(_);
   }
-})();
+}
+
+window.onload = () => {
+  sessionDomain();
+};

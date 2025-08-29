@@ -29,7 +29,7 @@ app.use(compression());
 const port = process.env.PORT || 3000;
 
 app.get("/", async (_: Request, res: Response) => {
-  const nonce = crypto.randomBytes(16).toString("base64");
+  const nonce = crypto.randomBytes(16).toString("base64");    
 
   fs.readFile(path.join(__dirname, "/index.html"), "utf8", (err, data) => {
     if (err) {
@@ -38,7 +38,6 @@ app.get("/", async (_: Request, res: Response) => {
     } else {
       let htmlString = data;
 
-      htmlString = htmlString.replace("NONCE-SCRIPT", `nonce="${nonce}"`);
       const header = `
         script-src 'self' 'nonce-${nonce}' https://cdn.jsdelivr.net sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO;
         style-src 'self' https://cdn.jsdelivr.net sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT;
