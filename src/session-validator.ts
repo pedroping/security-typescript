@@ -29,7 +29,7 @@ async function versionCheck() {
         _cookieStore.set({
           name: "cacheCookie",
           value: response,
-          expires: Date.now() + 120000,
+          expires: Date.now() + 30000,
         });
         localStorage.setItem("cacheVersion", response);
       })
@@ -56,7 +56,7 @@ async function versionCheck() {
         await _cookieStore.set({
           name: "cacheCookie",
           value: response,
-          expires: Date.now() + 100000,
+          expires: Date.now() + 30000,
         });
         return;
       }
@@ -64,7 +64,7 @@ async function versionCheck() {
       await _cookieStore.set({
         name: "cacheCookie",
         value: response,
-        expires: Date.now() + 100000,
+        expires: Date.now() + 30000,
       });
       localStorage.setItem("cacheVersion", response);
 
@@ -77,7 +77,7 @@ async function versionCheck() {
 
 async function versionCheckInterval() {
   await versionCheck();
-  setInterval(async () => await versionCheck(), 120000);
+  setInterval(async () => await versionCheck(), 30000);
 }
 
 async function sessionDomain() {
