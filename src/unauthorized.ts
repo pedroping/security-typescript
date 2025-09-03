@@ -1,3 +1,3 @@
 import { resetWorkers } from "@cache-handle";
 
-resetWorkers();
+resetWorkers({ noMessage: true });

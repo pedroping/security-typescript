@@ -42,7 +42,7 @@ app.get("/", async (_: Request, res: Response) => {
       let htmlString = data;
 
       const header = `
-        script-src 'self' 'nonce-${nonce}' https://cdn.jsdelivr.net sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO;
+        script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO;
         style-src 'self' https://cdn.jsdelivr.net sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT;
         img-src 'self' data:;
         font-src 'self';
@@ -100,7 +100,7 @@ app.get(
           return;
         } else {
           const header = `
-          script-src 'self';
+          script-src 'self' 'unsafe-inline';
           style-src 'self';
           img-src 'self' data:;
           font-src 'self';
