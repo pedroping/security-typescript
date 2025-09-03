@@ -1,2 +1,3 @@
-window.location.reload();
-location.reload();
+import { resetWorkers } from "@cache-handle";
+
+resetWorkers();
