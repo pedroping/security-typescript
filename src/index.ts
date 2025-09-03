@@ -30,11 +30,11 @@ function embedScripts() {
   bootstrapScript.integrity =
     "sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO";
   bootstrapScript.crossOrigin = "anonymous";
-  bootstrapScript.defer = true;
+  bootstrapScript.async = true;
 
   sessionValidatorScript.src = "/dist/session-validator.bundle.js";
   sessionValidatorScript.crossOrigin = "anonymous";
-  sessionValidatorScript.defer = true;
+  sessionValidatorScript.async = true;
 
   document.body.appendChild(bootstrapScript);
   document.body.appendChild(sessionValidatorScript);
