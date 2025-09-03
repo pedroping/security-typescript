@@ -44,6 +44,27 @@ const cacheFirst = async ({ request, preloadResponsePromise }) => {
   }
 
   try {
+    const preloadResponse = await preloadResponsePromise;
+
+    if (preloadResponse) {
+      await putInCache(request, preloadResponse.clone());
+      return preloadResponse;
+    }
+
+    const cache = await caches.open(CACHE_NAME);
+    const keys = await cache.keys();
+
+    const findRequest = keys.find(
+      (cachedRequest) => cachedRequest.url === request.url
+    );
+
+    const cachedResponse = await cache.match(findRequest);
+
+    if (cachedResponse) {
+      await putInCache(request, cachedResponse.clone());
+      return cachedResponse;
+    }
+
     const networkResponse = await fetch(request);
     await putInCache(request, networkResponse.clone());
     return networkResponse;

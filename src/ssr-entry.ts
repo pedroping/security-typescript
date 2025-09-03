@@ -16,8 +16,8 @@ const cookieHash = crypto
   .update("ProjectToken")
   .digest("hex");
 
-console.log('Application auth: ', cookieHash);
-console.log('Application version: ', cacheVersion);
+console.log("Application auth: ", cookieHash);
+console.log("Application version: ", cacheVersion);
 
 const corsOptions = {
   origin: "http://localhost",
@@ -69,6 +69,10 @@ app.get("/", async (_: Request, res: Response) => {
       res.setHeader("Content-Security-Policy", header);
       res.setHeader("x-content-type-options", "nosniff");
       res.setHeader("X-Permitted-Cross-Domain-Policies", "none");
+      res.setHeader(
+        "cache-control",
+        "public, max-age=31536000, s-maxage=31536000, must-revalidate"
+      );
 
       res.send(htmlString);
     }
@@ -87,7 +91,7 @@ app.get(
       fileName == "index.bundle.js" &&
       (!cookie || !cookie.includes(cookieHash))
     ) {
-      fileName = 'unauthorized.bundle.js'
+      fileName = "unauthorized.bundle.js";
     }
 
     fs.readFile(
@@ -115,6 +119,10 @@ app.get(
             .trim();
           res.setHeader("X-Frame-Options", "SAMEORIGIN");
           res.setHeader("Content-Security-Policy", header);
+          res.setHeader(
+            "cache-control",
+            "public, max-age=31536000, s-maxage=31536000, must-revalidate"
+          );
           res.cookie("MyTokenAuth", cookieHash, {
             path: "/",
             httpOnly: true,
