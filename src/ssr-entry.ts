@@ -30,7 +30,14 @@ const corsOptions = {
 const distPath = path.join(__dirname, "../dist");
 const fileCache: { [key: string]: any } = {};
 
-const jsFiles = ["index.bundle.js", "unauthorized.bundle.js"];
+const jsFiles = [
+  "index.bundle.js",
+  "unauthorized.bundle.js",
+  "cache-handle.bundle.js",
+  "session-validator.bundle.js",
+  "sw.bundle.js",
+];
+
 jsFiles.forEach((file) => {
   const filePath = path.join(distPath, file);
   const data = fs.readFileSync(filePath, "utf8");
@@ -107,19 +114,37 @@ app.get(
 
     const filePath = path.join(distPath, fileName);
 
+    const header = `
+      script-src 'self' 'unsafe-inline';
+      style-src 'self';
+      img-src 'self' data:;
+      font-src 'self';
+      object-src 'none';
+      base-uri 'self';
+      form-action 'self';
+      frame-ancestors 'none';
+      block-all-mixed-content;
+      upgrade-insecure-requests;
+    `
+      .replace(/\s+/g, " ")
+      .trim();
+
+    res.setHeader("X-Frame-Options", "SAMEORIGIN");
+    res.setHeader("Content-Security-Policy", header);
+    res.setHeader("Content-Type", "text/javascript; charset=utf-8");
+    res.setHeader(
+      "cache-control",
+      "public, max-age=31536000, s-maxage=31536000, must-revalidate"
+    );
+    res.cookie("MyTokenAuth", cookieHash, {
+      path: "/",
+      httpOnly: true,
+      maxAge: 2592000,
+      sameSite: "none",
+      secure: true,
+    });
+
     if (fileCache[fileName]) {
-      res.setHeader("Content-Type", "text/javascript; charset=utf-8");
-      res.setHeader(
-        "cache-control",
-        "public, max-age=31536000, s-maxage=31536000, must-revalidate"
-      );
-      res.cookie("MyTokenAuth", cookieHash, {
-        path: "/",
-        httpOnly: true,
-        maxAge: 2592000,
-        sameSite: "none",
-        secure: true,
-      });
       res.send(fileCache[fileName]);
       return;
     }
@@ -132,35 +157,6 @@ app.get(
     });
 
     fileStream.on("open", () => {
-      const header = `
-      script-src 'self' 'unsafe-inline';
-      style-src 'self';
-      img-src 'self' data:;
-      font-src 'self';
-      object-src 'none';
-      base-uri 'self';
-      form-action 'self';
-      frame-ancestors 'none';
-      block-all-mixed-content;
-      upgrade-insecure-requests;
-    `
-        .replace(/\s+/g, " ")
-        .trim();
-
-      res.setHeader("X-Frame-Options", "SAMEORIGIN");
-      res.setHeader("Content-Security-Policy", header);
-      res.setHeader(
-        "cache-control",
-        "public, max-age=31536000, s-maxage=31536000, must-revalidate"
-      );
-      res.cookie("MyTokenAuth", cookieHash, {
-        path: "/",
-        httpOnly: true,
-        maxAge: 2592000,
-        sameSite: "none",
-        secure: true,
-      });
-
       const fileExtension = fileName.split(".").pop();
       if (fileExtension === "js" || fileExtension === "mjs") {
         res.setHeader("Content-Type", "text/javascript; charset=utf-8");
@@ -203,6 +199,11 @@ app.get(
       .trim();
     res.setHeader("X-Frame-Options", "SAMEORIGIN");
     res.setHeader("Content-Security-Policy", header);
+
+    if (fileCache["sw.bundle.js"]) {
+      res.send(fileCache["sw.bundle.js"]);
+      return;
+    }
 
     res.sendFile(path.join(__dirname, `../dist/sw.bundle.js`));
   }
