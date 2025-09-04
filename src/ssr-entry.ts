@@ -27,13 +27,25 @@ const corsOptions = {
   credentials: true,
 };
 
+const distPath = path.join(__dirname, "../dist");
+const fileCache: { [key: string]: any } = {};
+
+const jsFiles = ["index.bundle.js", "unauthorized.bundle.js"];
+jsFiles.forEach((file) => {
+  const filePath = path.join(distPath, file);
+  const data = fs.readFileSync(filePath, "utf8");
+  const minifiedCode = UglifyJS.minify(data, {
+    toplevel: true,
+    mangle: { properties: true },
+  }).code;
+  fileCache[file] = minifiedCode;
+});
+
 const app = express();
 app.use(compression());
 const port = process.env.PORT || 3000;
 
 app.get("/", async (_: Request, res: Response) => {
-  const nonce = crypto.randomBytes(16).toString("base64");
-
   fs.readFile(path.join(__dirname, "/index.html"), "utf8", (err, data) => {
     if (err) {
       console.error("Error reading HTML file:", err);
@@ -83,79 +95,81 @@ app.get(
   "/dist/:fileName",
   cors(corsOptions),
   async (req: Request, res: Response) => {
-    let fileName = req.params["fileName"];
-
+    let { fileName } = req.params;
     const cookie = req.headers?.cookie?.replace("MyTokenAuth=", "");
 
     if (
-      fileName == "index.bundle.js" &&
+      fileName === "index.bundle.js" &&
       (!cookie || !cookie.includes(cookieHash))
     ) {
       fileName = "unauthorized.bundle.js";
     }
 
-    fs.readFile(
-      path.join(__dirname, `../dist/${fileName}`),
-      "utf8",
-      (err, data) => {
-        if (err) {
-          console.error("Error reading HTML file:", err);
-          res.sendStatus(404);
-          return;
-        } else {
-          const header = `
-          script-src 'self' 'unsafe-inline';
-          style-src 'self';
-          img-src 'self' data:;
-          font-src 'self';
-          object-src 'none';
-          base-uri 'self';
-          form-action 'self';
-          frame-ancestors 'none';
-          block-all-mixed-content;
-          upgrade-insecure-requests;
-        `
-            .replace(/\s+/g, " ")
-            .trim();
-          res.setHeader("X-Frame-Options", "SAMEORIGIN");
-          res.setHeader("Content-Security-Policy", header);
-          res.setHeader(
-            "cache-control",
-            "public, max-age=31536000, s-maxage=31536000, must-revalidate"
-          );
-          res.cookie("MyTokenAuth", cookieHash, {
-            path: "/",
-            httpOnly: true,
-            maxAge: 2592000,
-            sameSite: "none",
-            secure: true,
-          });
+    const filePath = path.join(distPath, fileName);
 
-          const fileExtension = fileName.split(".");
+    if (fileCache[fileName]) {
+      res.setHeader("Content-Type", "text/javascript; charset=utf-8");
+      res.setHeader(
+        "cache-control",
+        "public, max-age=31536000, s-maxage=31536000, must-revalidate"
+      );
+      res.cookie("MyTokenAuth", cookieHash, {
+        path: "/",
+        httpOnly: true,
+        maxAge: 2592000,
+        sameSite: "none",
+        secure: true,
+      });
+      res.send(fileCache[fileName]);
+      return;
+    }
 
-          if (
-            fileExtension[fileExtension.length - 1] != "js" &&
-            fileExtension[fileExtension.length - 1] != "mjs"
-          ) {
-            res.send(data);
-            return;
-          }
+    const fileStream = fs.createReadStream(filePath);
 
-          const codeToMinify: { [key: string]: string } = {};
-          codeToMinify[fileName] = data;
+    fileStream.on("error", (err) => {
+      console.error("Error reading file:", err);
+      res.sendStatus(404);
+    });
 
-          const minifyedCode = UglifyJS.minify(codeToMinify, {
-            toplevel: true,
-            mangle: {
-              properties: true,
-            },
-          }).code;
+    fileStream.on("open", () => {
+      const header = `
+      script-src 'self' 'unsafe-inline';
+      style-src 'self';
+      img-src 'self' data:;
+      font-src 'self';
+      object-src 'none';
+      base-uri 'self';
+      form-action 'self';
+      frame-ancestors 'none';
+      block-all-mixed-content;
+      upgrade-insecure-requests;
+    `
+        .replace(/\s+/g, " ")
+        .trim();
 
-          res.setHeader("Content-Type", "text/javascript; charset=utf-8");
-          res.send(minifyedCode);
-        }
+      res.setHeader("X-Frame-Options", "SAMEORIGIN");
+      res.setHeader("Content-Security-Policy", header);
+      res.setHeader(
+        "cache-control",
+        "public, max-age=31536000, s-maxage=31536000, must-revalidate"
+      );
+      res.cookie("MyTokenAuth", cookieHash, {
+        path: "/",
+        httpOnly: true,
+        maxAge: 2592000,
+        sameSite: "none",
+        secure: true,
+      });
+
+      const fileExtension = fileName.split(".").pop();
+      if (fileExtension === "js" || fileExtension === "mjs") {
+        res.setHeader("Content-Type", "text/javascript; charset=utf-8");
+      } else if (fileExtension === "html") {
+        res.setHeader("Content-Type", "text/html; charset=utf-8");
       }
-    );
+
+      fileStream.pipe(res);
+    });
   }
 );
 
