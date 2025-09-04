@@ -199,8 +199,9 @@ app.get(
       .trim();
     res.setHeader("X-Frame-Options", "SAMEORIGIN");
     res.setHeader("Content-Security-Policy", header);
+    res.setHeader("Content-Type", "text/javascript; charset=utf-8");
 
-    if (fileCache["sw.bundle.js"]) {
+    if (fileCache["sw.bundle.js"]) {      
       res.send(fileCache["sw.bundle.js"]);
       return;
     }
